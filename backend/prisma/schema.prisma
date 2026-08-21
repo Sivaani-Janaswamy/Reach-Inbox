@@ -1,0 +1,95 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         String   @id @default(uuid())
+  googleId   String?  @unique @map("google_id")
+  email      String   @unique
+  name       String?
+  avatarUrl  String?  @map("avatar_url")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+  senders    Sender[]
+  campaigns  Campaign[]
+
+  @@map("users")
+}
+
+model Sender {
+  id                 String   @id @default(uuid())
+  userId             String   @map("user_id")
+  name               String
+  smtpUser           String   @map("smtp_user")
+  smtpPass           String   @map("smtp_pass")
+  smtpHost           String   @map("smtp_host")
+  smtpPort           Int      @map("smtp_port")
+  maxEmailsPerHour   Int?     @map("max_emails_per_hour")
+  createdAt          DateTime @default(now()) @map("created_at")
+  user               User     @relation(fields: [userId], references: [id])
+  emails             Email[]
+
+  @@index([userId])
+  @@map("senders")
+}
+
+model Campaign {
+  id                     String   @id @default(uuid())
+  userId                 String   @map("user_id")
+  subject                String
+  body                   String
+  startTime              DateTime @map("start_time")
+  delayBetweenEmailsMs   Int      @map("delay_between_emails_ms")
+  hourlyLimitOverride    Int?     @map("hourly_limit_override")
+  totalRecipients        Int?     @map("total_recipients")
+  status                 String   @default("scheduling")
+  createdAt              DateTime @default(now()) @map("created_at")
+  user                   User     @relation(fields: [userId], references: [id])
+  emails                 Email[]
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("campaigns")
+}
+
+model Email {
+  id               String    @id @default(uuid())
+  campaignId       String    @map("campaign_id")
+  senderId         String    @map("sender_id")
+  recipientEmail   String    @map("recipient_email")
+  sequence         Int
+  scheduledAt      DateTime  @map("scheduled_at")
+  status           String    @default("pending")
+  jobId            String?   @unique @map("job_id")
+  attempts         Int       @default(0)
+  errorMessage     String?   @map("error_message")
+  sentAt           DateTime? @map("sent_at")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+  campaign         Campaign  @relation(fields: [campaignId], references: [id])
+  sender           Sender    @relation(fields: [senderId], references: [id])
+  sendLogs         SendLog[]
+
+  @@index([campaignId, sequence])
+  @@index([status, scheduledAt])
+  @@index([senderId, status])
+  @@map("emails")
+}
+
+model SendLog {
+  id            BigInt   @id @default(autoincrement())
+  emailId       String   @map("email_id")
+  attemptNumber Int      @map("attempt_number")
+  outcome       String
+  smtpMessageId String?  @map("smtp_message_id")
+  errorMessage  String?  @map("error_message")
+  occurredAt    DateTime @default(now()) @map("occurred_at")
+  email         Email    @relation(fields: [emailId], references: [id])
+
+  @@index([emailId, occurredAt])
+  @@map("send_log")
+}
