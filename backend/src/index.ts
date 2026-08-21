@@ -3,6 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import { campaignsRouter } from './campaigns.js';
 import { config } from './config.js';
+import { reconcileScheduledEmails } from './reconcile.js';
 
 const app = express();
 
@@ -19,6 +20,15 @@ app.get('/api', (_req, res) => {
 
 app.use('/api/campaigns', campaignsRouter);
 
-app.listen(config.port, () => {
-  console.log(`Backend listening on http://localhost:${config.port}`);
+async function start() {
+  const requeued = await reconcileScheduledEmails();
+  app.listen(config.port, () => {
+    console.log(`Backend listening on http://localhost:${config.port}`);
+    console.log(`Reconciled ${requeued} scheduled email job(s)`);
+  });
+}
+
+start().catch((error) => {
+  console.error('Backend startup failed', error);
+  process.exit(1);
 });

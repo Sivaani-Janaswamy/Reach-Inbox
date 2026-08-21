@@ -45,13 +45,19 @@ through.
 - The final send verification reached Ethereal but was blocked by `Greeting never received`, indicating external SMTP connectivity is unavailable or intermittent.
 
 ## Phase 3 — Persistence & restart safety (~2–3 hrs)
-- [ ] Enable Redis persistence (`appendonly yes`)
-- [ ] Startup reconciliation: on boot, find `emails` with status
+- [x] Enable Redis persistence (`appendonly yes`)
+- [x] Startup reconciliation: on boot, find `emails` with status
       `scheduled`/`pending` and no live BullMQ job, re-enqueue them
-- [ ] Worker re-checks `emails.status` before sending (skip if already `sent`)
+- [x] Worker re-checks `emails.status` before sending (skip if already `sent`)
 - [ ] **Test: schedule email 2 min out, `docker compose stop backend`,
       restart before the 2 min elapses, confirm it still sends once, not
       zero or twice**
+
+### Current progress note
+- Redis AOF persistence is enabled and verified with `appendonly yes`.
+- Backend startup now reconciles pending/scheduled database rows against BullMQ.
+- The worker skips jobs whose database status is already `sent`.
+- The live backend restart scenario remains to be tested after SMTP connectivity is available.
 
 ## Phase 4 — Concurrency, pacing, rate limiting (~4–6 hrs)
 - [ ] `WORKER_CONCURRENCY` env var wired into BullMQ worker options
