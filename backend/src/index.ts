@@ -1,9 +1,11 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
+import { ZodError } from 'zod';
 import { campaignsRouter } from './campaigns.js';
 import { config } from './config.js';
 import { reconcileScheduledEmails } from './reconcile.js';
+import { apiRouter } from './api.js';
 
 const app = express();
 
@@ -19,6 +21,16 @@ app.get('/api', (_req, res) => {
 });
 
 app.use('/api/campaigns', campaignsRouter);
+app.use('/api', apiRouter);
+
+app.use((error: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  if (error instanceof ZodError) {
+    res.status(400).json({ error: 'Validation failed', details: error.flatten().fieldErrors });
+    return;
+  }
+  console.error(error);
+  res.status(500).json({ error: 'Internal server error' });
+});
 
 async function start() {
   const requeued = await reconcileScheduledEmails();

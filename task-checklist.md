@@ -77,11 +77,15 @@ through.
 - The live 20-email verification remains open while Ethereal SMTP connectivity is unavailable.
 
 ## Phase 5 — Remaining backend endpoints (~2 hrs)
-- [ ] `GET /api/emails?status=scheduled` (paginated)
-- [ ] `GET /api/emails?status=sent`
-- [ ] `GET /api/campaigns/:id`
-- [ ] `GET /api/senders`, `POST /api/senders`
-- [ ] Basic error handling / validation middleware
+- [x] `GET /api/emails?status=scheduled` (paginated)
+- [x] `GET /api/emails?status=sent`
+- [x] `GET /api/campaigns/:id`
+- [x] `GET /api/senders`, `POST /api/senders`
+- [x] Basic error handling / validation middleware
+
+### Current progress note
+- Email list, campaign detail, and sender endpoints were tested against live Postgres data.
+- Invalid sender input returned HTTP 400 through the centralized validation handler.
 
 ## Phase 6 — Google OAuth (~2–3 hrs)
 - [ ] Register OAuth app in Google Cloud Console, get client id/secret
