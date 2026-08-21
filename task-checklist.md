@@ -9,16 +9,15 @@ through.
 - [x] Init monorepo: `/backend`, `/frontend`, root `README.md`
 - [x] `docker-compose.yml` for Postgres + Redis
 - [x] Backend: Express + TypeScript scaffold, `tsconfig`, `nodemon`/`ts-node-dev`
-- [ ] Set up ORM/query builder (Prisma recommended for speed) + connect to DB
-- [ ] Set up BullMQ + ioredis connection
-- [ ] Create Ethereal test account(s) via `nodemailer.createTestAccount()`, store creds in `.env`
+- [x] Set up ORM/query builder (Prisma recommended for speed) + connect to DB
+- [x] Set up BullMQ + ioredis connection
+- [x] Create Ethereal test account(s) via `nodemailer.createTestAccount()`, store creds in `.env`
 - [x] Frontend: Next.js + TypeScript + Tailwind scaffold
 
 ### Current progress note
 - Base monorepo and app shell have been created.
 - Backend and frontend both compile successfully.
-- Docker compose file for Postgres + Redis is ready.
-- Prisma/BullMQ wiring and scheduling logic remain to be implemented.
+- Docker Compose, Prisma, Postgres, Redis, BullMQ, and SMTP fallback wiring are ready.
 
 ## Phase 1 — DB schema (~1 hr)
 - [x] Create `users`, `senders`, `campaigns`, `emails`, `send_log` tables (see database.md)
@@ -26,18 +25,24 @@ through.
 - [x] Seed script: 1 demo user + 2 Ethereal senders
 
 ### Current progress note
-- Prisma schema and seed logic are in place and the schema validates successfully.
-- The migration run is currently blocked until Docker/Postgres is running locally.
-- Once the database service is available, run `npx prisma migrate dev --name init_schema` and `npm run seed`.
+- Prisma schema validates successfully.
+- Initial migration `20260821155525_init_schema` has been applied successfully.
+- Seed completed with one demo user and two demo senders.
+- Verified that all six expected tables exist in Postgres.
 
 ## Phase 2 — Core scheduler vertical slice (~4–6 hrs)
-- [ ] `POST /api/campaigns`: accept subject/body/CSV/start_time/delay/hourly_limit
-- [ ] CSV parsing + dedup + lead-count response
-- [ ] Compute `scheduled_at` per email (start_time + index * delay)
-- [ ] Insert `campaigns` + `emails` rows
-- [ ] Enqueue one BullMQ delayed job per email, `jobId = email.id`
-- [ ] Worker: consume `email-send` queue, send via Ethereal, update `emails.status`
+- [x] `POST /api/campaigns`: accept subject/body/CSV/start_time/delay/hourly_limit
+- [x] CSV parsing + dedup + lead-count response
+- [x] Compute `scheduled_at` per email (start_time + index * delay)
+- [x] Insert `campaigns` + `emails` rows
+- [x] Enqueue one BullMQ delayed job per email, `jobId = email.id`
+- [x] Worker: consume `email-send` queue, send via Ethereal, update `emails.status`
 - [ ] **Test: schedule 1 email 30s out, confirm it sends and DB updates**
+
+### Current progress note
+- The campaign API and worker were exercised with real CSV submissions.
+- Persistence and BullMQ job creation were verified successfully.
+- The final send verification reached Ethereal but was blocked by `Greeting never received`, indicating external SMTP connectivity is unavailable or intermittent.
 
 ## Phase 3 — Persistence & restart safety (~2–3 hrs)
 - [ ] Enable Redis persistence (`appendonly yes`)
