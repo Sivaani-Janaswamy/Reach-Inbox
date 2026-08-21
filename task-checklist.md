@@ -103,7 +103,7 @@ through.
 - Frontend login and dashboard integration remain for Phase 7.
 
 ## Phase 7 — Frontend dashboard (~5–7 hrs)
-- [ ] Compare against provided Figma; note any deviations for the README
+- [x] Compare against provided Figma; note any deviations for the README
 - [x] Reusable components: Button, Input, Table, Modal, StatusBadge, EmptyState, Toast
 - [x] Dashboard shell: header (user info + logout), tabs (Scheduled/Sent), Compose button
 - [x] Compose modal/page: subject, body, CSV upload with parsed count preview,
@@ -118,7 +118,10 @@ through.
 - CSV lead preview and campaign submission are wired to the scheduling endpoint.
 - The `/dashboard` route is available for the OAuth callback, and the header loads the authenticated user from `/api/me` when a session exists.
 - Shared UI primitives and typed API response contracts are now in place.
-- Visual comparison and live OAuth credential testing remain.
+- Figma-driven static screens are implemented at `/login`, `/dashboard`, `/sent`, `/email/1`, and `/compose`.
+- The design brief was followed for the AppShell, list rows/states, detail view, TipTap editor, and Radix Send Later popover.
+- Live OAuth credential testing remains.
+- Frontend design brief reviewed; exact Tailwind tokens and the first AppShell slice are implemented and build-verified.
 
 ## Phase 8 — Polish & load-behavior sanity check (~2 hrs)
 - [ ] Schedule 1000 emails (script or CSV) for the same timestamp, confirm

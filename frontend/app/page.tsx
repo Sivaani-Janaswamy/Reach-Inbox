@@ -2,6 +2,7 @@
 
 import { ChangeEvent, FormEvent, useEffect, useState } from 'react';
 import { EmptyState, StatusBadge } from './components/ui';
+import { AppShell } from './components/app-shell';
 import type { CurrentUser, EmailListResponse, EmailRecord, Sender, SenderListResponse, Tab } from './types';
 
 const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
@@ -52,20 +53,7 @@ export default function HomePage() {
   }
 
   return (
-    <main className="app-shell">
-      <header className="topbar">
-        <a className="brand" href="/">
-          <span className="brand-mark">R</span>
-          <span>ReachInbox</span>
-        </a>
-        <div className="topbar-actions">
-          <a className="login-link" href={`${apiBase}/auth/google`}>Sign in with Google</a>
-          {user ? <button className="avatar-button" onClick={logout} title={`Log out ${user.name || user.email}`}>
-            {user.avatar_url ? <img src={user.avatar_url} alt="" /> : (user.name || user.email).slice(0, 2).toUpperCase()}
-          </button> : <a className="avatar-button demo-avatar" href={`${apiBase}/auth/google`} title="Sign in with Google">?</a>}
-        </div>
-      </header>
-
+    <AppShell user={user ? { name: user.name || user.email, email: user.email, avatarUrl: user.avatar_url } : undefined} active={tab} onCompose={() => setShowCompose(true)}>
       <section className="content-wrap">
         <div className="page-heading">
           <div>
@@ -103,7 +91,7 @@ export default function HomePage() {
       </section>
 
       {showCompose && <ComposeModal senders={senders} onClose={() => setShowCompose(false)} onCreated={() => { setShowCompose(false); setTab('scheduled'); loadEmails('scheduled'); setNotice('Campaign scheduled successfully'); }} />}
-    </main>
+    </AppShell>
   );
 }
 
