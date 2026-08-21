@@ -3,14 +3,18 @@ import { emailQueue } from './queue.js';
 
 export async function reconcileScheduledEmails(): Promise<number> {
   const emails = await prisma.email.findMany({
-    where: { status: { in: ['pending', 'scheduled'] } },
-    select: { id: true, scheduledAt: true, status: true },
+    where: { status: { in: ['pending', 'scheduled', 'rescheduled'] } },
+    select: { id: true, scheduledAt: true },
   });
   let requeued = 0;
 
   for (const email of emails) {
     const existingJob = await emailQueue.getJob(email.id);
-    if (existingJob) continue;
+    if (existingJob) {
+      const state = await existingJob.getState();
+      if (['waiting', 'delayed', 'active', 'prioritized', 'waiting-children'].includes(state)) continue;
+      await existingJob.remove();
+    }
 
     await emailQueue.add(
       'send-email',

@@ -42,6 +42,7 @@ through.
 ### Current progress note
 - The campaign API and worker were exercised with real CSV submissions.
 - Persistence and BullMQ job creation were verified successfully.
+- Worker SMTP transports now use each sender's stored credentials, with a generated Ethereal fallback for demo placeholders.
 - The final send verification reached Ethereal but was blocked by `Greeting never received`, indicating external SMTP connectivity is unavailable or intermittent.
 
 ## Phase 3 — Persistence & restart safety (~2–3 hrs)
@@ -60,14 +61,20 @@ through.
 - The live backend restart scenario remains to be tested after SMTP connectivity is available.
 
 ## Phase 4 — Concurrency, pacing, rate limiting (~4–6 hrs)
-- [ ] `WORKER_CONCURRENCY` env var wired into BullMQ worker options
-- [ ] Min delay between sends via BullMQ `limiter` option (document the chosen value in README)
-- [ ] Redis-backed per-sender hourly counter (`INCR` + `EXPIRE`, atomic)
-- [ ] On limit exceeded: reschedule job into next hour window (don't fail/drop)
-- [ ] `sequence` field used to preserve order on rescheduled batches
-- [ ] Global hourly cap (optional, if doing both global + per-sender)
+- [x] `WORKER_CONCURRENCY` env var wired into BullMQ worker options
+- [x] Min delay between sends via BullMQ `limiter` option (document the chosen value in README)
+- [x] Redis-backed per-sender hourly counter (`INCR` + `EXPIRE`, atomic)
+- [x] On limit exceeded: reschedule job into next hour window (don't fail/drop)
+- [x] `sequence` field used to preserve order on rescheduled batches
+- [x] Global hourly cap (optional, if doing both global + per-sender)
 - [ ] **Test: set `MAX_EMAILS_PER_HOUR_PER_SENDER=5`, schedule 20 for the
       same minute, confirm 5 send and the rest roll into the next hour**
+
+### Current progress note
+- BullMQ concurrency and minimum-delay pacing are configured in the worker.
+- Sender and global rate counters use atomic Redis Lua operations with expiry.
+- Rate-limited jobs are rescheduled at the next UTC hour with sequence offsets.
+- The live 20-email verification remains open while Ethereal SMTP connectivity is unavailable.
 
 ## Phase 5 — Remaining backend endpoints (~2 hrs)
 - [ ] `GET /api/emails?status=scheduled` (paginated)
