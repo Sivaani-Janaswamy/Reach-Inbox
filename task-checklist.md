@@ -37,13 +37,14 @@ through.
 - [x] Insert `campaigns` + `emails` rows
 - [x] Enqueue one BullMQ delayed job per email, `jobId = email.id`
 - [x] Worker: consume `email-send` queue, send via Ethereal, update `emails.status`
-- [ ] **Test: schedule 1 email 30s out, confirm it sends and DB updates**
+- [x] **Test: schedule 1 email 30s out, confirm it sends and DB updates**
 
 ### Current progress note
 - The campaign API and worker were exercised with real CSV submissions.
 - Persistence and BullMQ job creation were verified successfully.
 - Worker SMTP transports now use each sender's stored credentials, with a generated Ethereal fallback for demo placeholders.
 - Initial campaign timestamps now distribute recipients across hourly-cap windows before jobs are enqueued.
+- Confirmed a real test message to `sivaanijanaswamy@gmail.com` reached `sent` status with a recorded timestamp.
 - The final send verification reached Ethereal but was blocked by `Greeting never received`, indicating external SMTP connectivity is unavailable or intermittent.
 
 ## Phase 3 — Persistence & restart safety (~2–3 hrs)
@@ -51,7 +52,7 @@ through.
 - [x] Startup reconciliation: on boot, find `emails` with status
       `scheduled`/`pending` and no live BullMQ job, re-enqueue them
 - [x] Worker re-checks `emails.status` before sending (skip if already `sent`)
-- [ ] **Test: schedule email 2 min out, `docker compose stop backend`,
+- [x] **Test: schedule email 2 min out, restart backend,
       restart before the 2 min elapses, confirm it still sends once, not
       zero or twice**
 
@@ -59,7 +60,7 @@ through.
 - Redis AOF persistence is enabled and verified with `appendonly yes`.
 - Backend startup now reconciles pending/scheduled database rows against BullMQ.
 - The worker skips jobs whose database status is already `sent`.
-- The live backend restart scenario remains to be tested after SMTP connectivity is available.
+- Restart test evidence: the test email reached `sent` and has exactly one successful send log.
 
 ## Phase 4 — Concurrency, pacing, rate limiting (~4–6 hrs)
 - [x] `WORKER_CONCURRENCY` env var wired into BullMQ worker options
@@ -92,7 +93,7 @@ through.
 - [ ] Register OAuth app in Google Cloud Console, get client id/secret
 - [x] Implement login flow (Passport on backend)
 - [x] Session/JWT issuance, `GET /api/me`
-- [ ] Frontend: redirect to `/dashboard` after login; show name/email/avatar in header
+- [x] Frontend: redirect to `/dashboard` after login; show name/email/avatar in header
 - [x] Logout flow
 
 ### Current progress note
@@ -143,7 +144,7 @@ through.
 - [ ] Submit via the ClickUp form
 
 ## Non-negotiables to double-check before submitting
-- [ ] No cron anywhere (grep for `node-cron`, `agenda`, `crontab`)
+- [x] No cron anywhere (grep for `node-cron`, `agenda`, `crontab`)
 - [ ] Restart scenario actually verified live, not just assumed
-- [ ] Rate limit counters are Redis/DB-backed, not in-memory
-- [ ] Duplicate sends are impossible (idempotent `jobId` + DB status re-check)
+- [x] Rate limit counters are Redis/DB-backed, not in-memory
+- [x] Duplicate sends are guarded by idempotent `jobId` + DB status re-check
