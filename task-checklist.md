@@ -123,11 +123,13 @@ through.
       no crash, jobs drain per rate limit/concurrency settings
 - [x] Basic toasts/error messages on failed API calls
 - [x] Lint/typecheck pass on both backend and frontend
+- [x] Automated backend smoke tests for health, authentication, and validation
 
 ### Current progress note
 - A real 1000-recipient campaign was accepted without crashing.
 - Verified 1000 database email rows and 1000 delayed BullMQ jobs were created.
 - Full delivery drain and rate-limit behavior remain open because the campaign was intentionally scheduled in the future and SMTP delivery is externally dependent.
+- Run automated backend tests with `npm --workspace backend test` before manual browser testing.
 
 ## Phase 9 — README & submission (~2 hrs)
 - [x] README: run instructions (backend, Redis, DB, worker, frontend)
