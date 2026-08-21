@@ -1,5 +1,5 @@
 import nodemailer from 'nodemailer';
-import { Worker } from 'bullmq';
+import { DelayedError, Worker } from 'bullmq';
 import { prisma } from './lib/prisma.js';
 import { config } from './config.js';
 import { redisConnection } from './queue.js';
@@ -59,7 +59,7 @@ const worker = new Worker('email-send', async (job) => {
       prisma.sendLog.create({ data: { emailId: email.id, attemptNumber: email.attempts + 1, outcome: 'rate_limited_rescheduled' } }),
     ]);
     await job.moveToDelayed(nextRunAt.getTime(), job.token);
-    return;
+    throw new DelayedError();
   }
 
   await prisma.email.update({ where: { id: email.id }, data: { status: 'sending', attempts: { increment: 1 } } });

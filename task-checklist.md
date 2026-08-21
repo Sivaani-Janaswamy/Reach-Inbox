@@ -76,7 +76,8 @@ through.
 - BullMQ concurrency and minimum-delay pacing are configured in the worker.
 - Sender and global rate counters use atomic Redis Lua operations with expiry.
 - Rate-limited jobs are rescheduled at the next UTC hour with sequence offsets.
-- The live 20-email verification remains open while Ethereal SMTP connectivity is unavailable.
+- The first 20-email verification produced 20 `rate_limited_rescheduled` entries, but the old worker also emitted BullMQ missing-lock errors.
+- The worker now throws BullMQ `DelayedError` after moving a rate-limited job; rerun the 20-email test to close this checkpoint.
 
 ## Phase 5 — Remaining backend endpoints (~2 hrs)
 - [x] `GET /api/emails?status=scheduled` (paginated)
