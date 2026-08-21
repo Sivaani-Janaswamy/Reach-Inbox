@@ -89,10 +89,15 @@ through.
 
 ## Phase 6 — Google OAuth (~2–3 hrs)
 - [ ] Register OAuth app in Google Cloud Console, get client id/secret
-- [ ] Implement login flow (NextAuth.js on frontend, or Passport on backend)
-- [ ] Session/JWT issuance, `GET /api/me`
+- [x] Implement login flow (Passport on backend)
+- [x] Session/JWT issuance, `GET /api/me`
 - [ ] Frontend: redirect to `/dashboard` after login; show name/email/avatar in header
-- [ ] Logout flow
+- [x] Logout flow
+
+### Current progress note
+- Passport Google OAuth, Express sessions, `/auth/google`, callback, logout, and `/api/me` are implemented.
+- Google Cloud credentials still need to be registered and added to `backend/.env`.
+- Frontend login and dashboard integration remain for Phase 7.
 
 ## Phase 7 — Frontend dashboard (~5–7 hrs)
 - [ ] Compare against provided Figma; note any deviations for the README
