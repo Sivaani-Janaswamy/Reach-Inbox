@@ -1,18 +1,8 @@
 'use client';
 
 import { ChangeEvent, FormEvent, useEffect, useState } from 'react';
-
-type Tab = 'scheduled' | 'sent';
-type EmailRecord = {
-  id: string;
-  recipient_email: string;
-  subject: string;
-  scheduled_at: string;
-  sent_at: string | null;
-  status: string;
-  error_message: string | null;
-};
-type Sender = { id: string; name: string; smtpUser: string };
+import { EmptyState, StatusBadge } from './components/ui';
+import type { CurrentUser, EmailListResponse, EmailRecord, Sender, SenderListResponse, Tab } from './types';
 
 const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
@@ -28,13 +18,14 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [showCompose, setShowCompose] = useState(false);
   const [notice, setNotice] = useState('');
+  const [user, setUser] = useState<CurrentUser | null>(null);
 
   async function loadEmails(activeTab = tab) {
     setLoading(true);
     try {
       const response = await fetch(`${apiBase}/api/emails?status=${activeTab}&limit=50`, { credentials: 'include' });
       if (!response.ok) throw new Error('Could not load email activity');
-      const result = await response.json();
+      const result: EmailListResponse = await response.json();
       setEmails(result.data);
     } catch (error) {
       setNotice(error instanceof Error ? error.message : 'Could not load email activity');
@@ -45,9 +36,13 @@ export default function HomePage() {
 
   useEffect(() => {
     loadEmails(tab);
+    fetch(`${apiBase}/api/me`, { credentials: 'include' })
+      .then((response) => response.ok ? response.json() as Promise<CurrentUser> : null)
+      .then((currentUser) => setUser(currentUser))
+      .catch(() => setUser(null));
     fetch(`${apiBase}/api/senders`, { credentials: 'include' })
       .then((response) => response.json())
-      .then((result) => setSenders(result.data || []))
+      .then((result: SenderListResponse) => setSenders(result.data || []))
       .catch(() => setSenders([]));
   }, [tab]);
 
@@ -65,7 +60,9 @@ export default function HomePage() {
         </a>
         <div className="topbar-actions">
           <a className="login-link" href={`${apiBase}/auth/google`}>Sign in with Google</a>
-          <button className="avatar-button" onClick={logout} title="Log out">DU</button>
+          {user ? <button className="avatar-button" onClick={logout} title={`Log out ${user.name || user.email}`}>
+            {user.avatar_url ? <img src={user.avatar_url} alt="" /> : (user.name || user.email).slice(0, 2).toUpperCase()}
+          </button> : <a className="avatar-button demo-avatar" href={`${apiBase}/auth/google`} title="Sign in with Google">?</a>}
         </div>
       </header>
 
@@ -95,11 +92,11 @@ export default function HomePage() {
           </div>
 
           {notice && <div className="notice">{notice}<button onClick={() => setNotice('')}>Dismiss</button></div>}
-          {loading ? <div className="empty-state"><span className="loader" />Loading activity</div> : emails.length === 0 ? (
-            <div className="empty-state"><div className="empty-icon">--</div><strong>No {tab} emails yet</strong><span>Your campaign activity will appear here.</span></div>
+          {loading ? <EmptyState loading title="" detail="" /> : emails.length === 0 ? (
+            <EmptyState title={`No ${tab} emails yet`} detail="Your campaign activity will appear here." />
           ) : (
             <div className="table-scroll"><table><thead><tr><th>Recipient</th><th>Subject</th><th>{tab === 'scheduled' ? 'Scheduled for' : 'Sent at'}</th><th>Status</th></tr></thead><tbody>
-              {emails.map((email) => <tr key={email.id}><td className="recipient">{email.recipient_email}</td><td>{email.subject}</td><td>{formatDate(tab === 'scheduled' ? email.scheduled_at : email.sent_at)}</td><td><span className={`status ${email.status}`}>{email.status}</span></td></tr>)}
+              {emails.map((email) => <tr key={email.id}><td className="recipient">{email.recipient_email}</td><td>{email.subject}</td><td>{formatDate(tab === 'scheduled' ? email.scheduled_at : email.sent_at)}</td><td><StatusBadge status={email.status} /></td></tr>)}
             </tbody></table></div>
           )}
         </section>

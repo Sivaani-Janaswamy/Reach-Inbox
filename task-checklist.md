@@ -101,32 +101,39 @@ through.
 
 ## Phase 7 — Frontend dashboard (~5–7 hrs)
 - [ ] Compare against provided Figma; note any deviations for the README
-- [ ] Reusable components: Button, Input, Table, Modal, StatusBadge, EmptyState, Toast
-- [ ] Dashboard shell: header (user info + logout), tabs (Scheduled/Sent), Compose button
+- [x] Reusable components: Button, Input, Table, Modal, StatusBadge, EmptyState, Toast
+- [x] Dashboard shell: header (user info + logout), tabs (Scheduled/Sent), Compose button
 - [x] Compose modal/page: subject, body, CSV upload with parsed count preview,
       start time, delay input, hourly limit input → `POST /api/campaigns`
 - [x] Scheduled table: email/subject/scheduled time/status + loading + empty states
 - [x] Sent table: email/subject/sent time/status + loading + empty states
-- [ ] Wire all API calls with typed request/response interfaces
+- [x] Wire all API calls with typed request/response interfaces
 
 ### Current progress note
 - The dashboard and compose workflow are live at `http://localhost:3000`.
 - Scheduled and sent activity load from the backend API with loading, empty, and error states.
 - CSV lead preview and campaign submission are wired to the scheduling endpoint.
-- Real user information in the header, component extraction, typed API contracts, visual comparison, and OAuth UI integration remain.
+- The `/dashboard` route is available for the OAuth callback, and the header loads the authenticated user from `/api/me` when a session exists.
+- Shared UI primitives and typed API response contracts are now in place.
+- Visual comparison and live OAuth credential testing remain.
 
 ## Phase 8 — Polish & load-behavior sanity check (~2 hrs)
 - [ ] Schedule 1000 emails (script or CSV) for the same timestamp, confirm
       no crash, jobs drain per rate limit/concurrency settings
-- [ ] Basic toasts/error messages on failed API calls
-- [ ] Lint/typecheck pass on both backend and frontend
+- [x] Basic toasts/error messages on failed API calls
+- [x] Lint/typecheck pass on both backend and frontend
+
+### Current progress note
+- A real 1000-recipient campaign was accepted without crashing.
+- Verified 1000 database email rows and 1000 delayed BullMQ jobs were created.
+- Full delivery drain and rate-limit behavior remain open because the campaign was intentionally scheduled in the future and SMTP delivery is externally dependent.
 
 ## Phase 9 — README & submission (~2 hrs)
-- [ ] README: run instructions (backend, Redis, DB, worker, frontend)
-- [ ] README: Ethereal setup + all env vars documented
-- [ ] README: architecture overview (scheduling, persistence, rate limiting/concurrency)
-- [ ] README: feature checklist mapped to backend/frontend requirements
-- [ ] README: assumptions/shortcuts/trade-offs section
+- [x] README: run instructions (backend, Redis, DB, worker, frontend)
+- [x] README: Ethereal setup + all env vars documented
+- [x] README: architecture overview (scheduling, persistence, rate limiting/concurrency)
+- [x] README: feature checklist mapped to backend/frontend requirements
+- [x] README: assumptions/shortcuts/trade-offs section
 - [ ] Record ≤5 min demo video: schedule emails, show tables, restart
       scenario, brief rate-limit-under-load demo
 - [ ] Create private repo, grant access to `Mitrajit` and `Yadav036`
