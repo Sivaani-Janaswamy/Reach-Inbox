@@ -21,6 +21,34 @@ function parseRecipientEmails(csv: string): string[] {
   return [...new Set(emails)].filter((email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email));
 }
 
+function computeScheduledTimes(startTime: Date, delayMs: number, recipientCount: number, hourlyLimit: number | null): Date[] {
+  if (!hourlyLimit) {
+    return Array.from({ length: recipientCount }, (_, sequence) => new Date(startTime.getTime() + sequence * delayMs));
+  }
+
+  const times: Date[] = [];
+  let windowStart = new Date(startTime);
+  windowStart.setUTCMinutes(0, 0, 0);
+  let sendsInWindow = 0;
+
+  for (let sequence = 0; sequence < recipientCount; sequence += 1) {
+    const candidate = new Date(startTime.getTime() + sequence * delayMs);
+    if (candidate.getTime() >= windowStart.getTime() + 60 * 60 * 1000) {
+      windowStart = new Date(candidate);
+      windowStart.setUTCMinutes(0, 0, 0);
+      sendsInWindow = 0;
+    }
+    if (sendsInWindow >= hourlyLimit) {
+      windowStart = new Date(windowStart.getTime() + 60 * 60 * 1000);
+      sendsInWindow = 0;
+    }
+    const scheduledAt = new Date(Math.max(candidate.getTime(), windowStart.getTime()));
+    times.push(scheduledAt);
+    sendsInWindow += 1;
+  }
+  return times;
+}
+
 router.post('/', upload.single('leads'), async (req, res, next) => {
   try {
     const { subject, body, start_time: startTimeValue, delay_ms: delayMsValue, hourly_limit: hourlyLimitValue, sender_id: senderId } = req.body as Record<string, string>;
@@ -55,6 +83,7 @@ router.post('/', upload.single('leads'), async (req, res, next) => {
       res.status(400).json({ error: 'No sender is configured' });
       return;
     }
+    const scheduledTimes = computeScheduledTimes(startTime, delayMs, recipients.length, hourlyLimit);
 
     const campaign = await prisma.campaign.create({
       data: {
@@ -71,7 +100,7 @@ router.post('/', upload.single('leads'), async (req, res, next) => {
             senderId: sender.id,
             recipientEmail,
             sequence,
-            scheduledAt: new Date(startTime.getTime() + sequence * delayMs),
+            scheduledAt: scheduledTimes[sequence],
             status: 'pending',
           })),
         },

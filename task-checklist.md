@@ -43,6 +43,7 @@ through.
 - The campaign API and worker were exercised with real CSV submissions.
 - Persistence and BullMQ job creation were verified successfully.
 - Worker SMTP transports now use each sender's stored credentials, with a generated Ethereal fallback for demo placeholders.
+- Initial campaign timestamps now distribute recipients across hourly-cap windows before jobs are enqueued.
 - The final send verification reached Ethereal but was blocked by `Greeting never received`, indicating external SMTP connectivity is unavailable or intermittent.
 
 ## Phase 3 — Persistence & restart safety (~2–3 hrs)
