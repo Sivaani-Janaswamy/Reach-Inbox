@@ -103,11 +103,17 @@ through.
 - [ ] Compare against provided Figma; note any deviations for the README
 - [ ] Reusable components: Button, Input, Table, Modal, StatusBadge, EmptyState, Toast
 - [ ] Dashboard shell: header (user info + logout), tabs (Scheduled/Sent), Compose button
-- [ ] Compose modal/page: subject, body, CSV upload with parsed count preview,
+- [x] Compose modal/page: subject, body, CSV upload with parsed count preview,
       start time, delay input, hourly limit input → `POST /api/campaigns`
-- [ ] Scheduled table: email/subject/scheduled time/status + loading + empty states
-- [ ] Sent table: email/subject/sent time/status + loading + empty states
+- [x] Scheduled table: email/subject/scheduled time/status + loading + empty states
+- [x] Sent table: email/subject/sent time/status + loading + empty states
 - [ ] Wire all API calls with typed request/response interfaces
+
+### Current progress note
+- The dashboard and compose workflow are live at `http://localhost:3000`.
+- Scheduled and sent activity load from the backend API with loading, empty, and error states.
+- CSV lead preview and campaign submission are wired to the scheduling endpoint.
+- Real user information in the header, component extraction, typed API contracts, visual comparison, and OAuth UI integration remain.
 
 ## Phase 8 — Polish & load-behavior sanity check (~2 hrs)
 - [ ] Schedule 1000 emails (script or CSV) for the same timestamp, confirm
