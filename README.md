@@ -3,6 +3,7 @@
 ReachInbox is a full-stack email scheduler. It accepts recipient CSV files,
 creates durable campaign records in PostgreSQL, schedules one BullMQ job per
 recipient in Redis, and sends through Ethereal SMTP.
+https://reachinbox-backend-46xu.onrender.com
 
 ## Stack
 
