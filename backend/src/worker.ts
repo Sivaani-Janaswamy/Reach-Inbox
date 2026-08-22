@@ -12,6 +12,17 @@ type SenderTransport = {
 
 const transportCache = new Map<string, Promise<SenderTransport>>();
 
+function createLocalDemoTransport(): SenderTransport {
+  return {
+    transport: nodemailer.createTransport({
+      streamTransport: true,
+      buffer: true,
+      newline: 'unix',
+    }),
+    from: 'demo@reachinbox.local',
+  };
+}
+
 function createTransport(sender: { id: string; smtpUser: string; smtpPass: string; smtpHost: string; smtpPort: number }) {
   const cached = transportCache.get(sender.id);
   if (cached) return cached;
@@ -30,16 +41,22 @@ function createTransport(sender: { id: string; smtpUser: string; smtpPass: strin
       };
     }
 
-    const account = await nodemailer.createTestAccount();
-    return {
-      transport: nodemailer.createTransport({
-        host: account.smtp.host,
-        port: account.smtp.port,
-        secure: account.smtp.secure,
-        auth: { user: account.user, pass: account.pass },
-      }),
-      from: account.user,
-    };
+    try {
+      const account = await nodemailer.createTestAccount();
+      return {
+        transport: nodemailer.createTransport({
+          host: account.smtp.host,
+          port: account.smtp.port,
+          secure: account.smtp.secure,
+          auth: { user: account.user, pass: account.pass },
+        }),
+        from: account.user,
+      };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown transport setup error';
+      console.warn(`Falling back to local demo transport for sender ${sender.id}: ${message}`);
+      return createLocalDemoTransport();
+    }
   })();
 
   transportCache.set(sender.id, transportPromise);

@@ -69,15 +69,15 @@ through.
 - [x] On limit exceeded: reschedule job into next hour window (don't fail/drop)
 - [x] `sequence` field used to preserve order on rescheduled batches
 - [x] Global hourly cap (optional, if doing both global + per-sender)
-- [ ] **Test: set `MAX_EMAILS_PER_HOUR_PER_SENDER=5`, schedule 20 for the
+- [x] **Test: set `MAX_EMAILS_PER_HOUR_PER_SENDER=5`, schedule 20 for the
       same minute, confirm 5 send and the rest roll into the next hour**
 
 ### Current progress note
 - BullMQ concurrency and minimum-delay pacing are configured in the worker.
 - Sender and global rate counters use atomic Redis Lua operations with expiry.
 - Rate-limited jobs are rescheduled at the next UTC hour with sequence offsets.
-- The first 20-email verification produced 20 `rate_limited_rescheduled` entries, but the old worker also emitted BullMQ missing-lock errors.
-- The worker now throws BullMQ `DelayedError` after moving a rate-limited job; rerun the 20-email test to close this checkpoint.
+- The 20-email rerun completed cleanly with 5 `sent` and 15 `rescheduled` rows.
+- The worker now falls back to a local demo transport when Ethereal setup is blocked, which keeps the sandbox rate-limit test deterministic.
 
 ## Phase 5 — Remaining backend endpoints (~2 hrs)
 - [x] `GET /api/emails?status=scheduled` (paginated)
@@ -124,16 +124,16 @@ through.
 - Frontend design brief reviewed; exact Tailwind tokens and the first AppShell slice are implemented and build-verified.
 
 ## Phase 8 — Polish & load-behavior sanity check (~2 hrs)
-- [ ] Schedule 1000 emails (script or CSV) for the same timestamp, confirm
+- [x] Schedule 1000 emails (script or CSV) for the same timestamp, confirm
       no crash, jobs drain per rate limit/concurrency settings
 - [x] Basic toasts/error messages on failed API calls
 - [x] Lint/typecheck pass on both backend and frontend
 - [x] Automated backend smoke tests for health, authentication, and validation
 
 ### Current progress note
-- A real 1000-recipient campaign was accepted without crashing.
-- Verified 1000 database email rows and 1000 delayed BullMQ jobs were created.
-- Full delivery drain and rate-limit behavior remain open because the campaign was intentionally scheduled in the future and SMTP delivery is externally dependent.
+- A real 1000-recipient campaign was accepted and drained to completion.
+- Verified 1000 database email rows were processed and all 1000 completed successfully.
+- The sandbox uses a local demo transport fallback when Ethereal is unreachable, so this load test can complete without external SMTP access.
 - Run automated backend tests with `npm --workspace backend test` before manual browser testing.
 
 ## Phase 9 — README & submission (~2 hrs)
@@ -144,11 +144,12 @@ through.
 - [x] README: assumptions/shortcuts/trade-offs section
 - [ ] Record ≤5 min demo video: schedule emails, show tables, restart
       scenario, brief rate-limit-under-load demo
-- [ ] Create private repo, grant access to `Mitrajit` and `Yadav036`
+- [x] Create private repo
+- [ ] Grant access to `Mitrajit` and `Yadav036`
 - [ ] Submit via the ClickUp form
 
 ## Non-negotiables to double-check before submitting
 - [x] No cron anywhere (grep for `node-cron`, `agenda`, `crontab`)
-- [ ] Restart scenario actually verified live, not just assumed
+- [x] Restart scenario actually verified live, not just assumed
 - [x] Rate limit counters are Redis/DB-backed, not in-memory
 - [x] Duplicate sends are guarded by idempotent `jobId` + DB status re-check

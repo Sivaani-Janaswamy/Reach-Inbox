@@ -15,6 +15,7 @@ export function AppShell({
   scheduledCount = 12,
   sentCount = 785,
   onCompose,
+  onLogout,
 }: {
   children: React.ReactNode;
   user?: ShellUser;
@@ -22,12 +23,13 @@ export function AppShell({
   scheduledCount?: number;
   sentCount?: number;
   onCompose?: () => void;
+  onLogout?: () => void;
 }) {
   return (
     <div className="min-h-screen bg-white text-gray-900 lg:flex">
       <Sidebar user={user} active={active} scheduledCount={scheduledCount} sentCount={sentCount} onCompose={onCompose} />
       <div className="min-w-0 flex-1">
-        <Topbar />
+        <Topbar user={user} onLogout={onLogout} />
         <main>{children}</main>
       </div>
     </div>
@@ -80,14 +82,19 @@ function NavItem({ href, icon, label, count, active }: { href: string; icon: Rea
   </a>;
 }
 
-export function Topbar() {
-  return <header className="flex items-center gap-3 border-b border-gray-200 px-6 py-4 lg:px-8">
-    <label className="flex h-9 min-w-0 flex-1 items-center gap-2 rounded-full bg-gray-50 px-4 text-gray-400">
+export function Topbar({ user, onLogout }: { user: ShellUser; onLogout?: () => void }) {
+  return <header className="flex items-center gap-3 border-b border-gray-200 bg-white/90 px-6 py-4 backdrop-blur-sm lg:px-8">
+    <label className="flex h-10 min-w-0 flex-1 items-center gap-2 rounded-full border border-gray-200 bg-gray-50 px-4 text-gray-400 transition focus-within:border-gray-300 focus-within:bg-white">
       <Search className="h-4 w-4 shrink-0" aria-hidden="true" />
       <input className="min-w-0 flex-1 bg-transparent text-sm text-gray-900 outline-none placeholder:text-gray-400" placeholder="Search" aria-label="Search" />
     </label>
-    <button className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-gray-400 hover:bg-gray-50 hover:text-gray-900" title="Filter"><Filter className="h-4 w-4" /></button>
-    <button className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-gray-400 hover:bg-gray-50 hover:text-gray-900" title="Refresh"><RefreshCw className="h-4 w-4" /></button>
+    <button className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-gray-200 text-gray-400 transition hover:border-gray-300 hover:bg-gray-50 hover:text-gray-900" title="Filter"><Filter className="h-4 w-4" /></button>
+    <button className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-gray-200 text-gray-400 transition hover:border-gray-300 hover:bg-gray-50 hover:text-gray-900" title="Refresh"><RefreshCw className="h-4 w-4" /></button>
+    {onLogout && (
+      <button onClick={onLogout} className="hidden rounded-full border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 transition hover:border-gray-300 hover:bg-gray-50 hover:text-gray-900 lg:inline-flex" title={`Logout ${user.name}`}>
+        Logout
+      </button>
+    )}
   </header>;
 }
 
