@@ -1,9 +1,8 @@
-import { Router } from 'express';
+import { Router, type Request } from 'express';
 import { z } from 'zod';
 import { prisma } from './lib/prisma.js';
 
 const router = Router();
-const demoUserEmail = 'demo@reachinbox.local';
 const emailStatuses = ['pending', 'scheduled', 'sending', 'sent', 'failed', 'rescheduled'] as const;
 
 const senderSchema = z.object({
@@ -16,9 +15,18 @@ const senderSchema = z.object({
 });
 
 async function getDemoUser() {
-  const user = await prisma.user.findUnique({ where: { email: demoUserEmail } });
+  const user = await prisma.user.findFirst({ orderBy: { createdAt: 'asc' } });
   if (!user) throw new Error('Demo user is not seeded');
   return user;
+}
+
+async function getActiveUser(req: Request) {
+  const sessionUser = req.user as Express.User | undefined;
+  if (sessionUser?.id) {
+    const user = await prisma.user.findUnique({ where: { id: sessionUser.id } });
+    if (user) return user;
+  }
+  return getDemoUser();
 }
 
 router.get('/emails', async (req, res, next) => {
@@ -31,7 +39,7 @@ router.get('/emails', async (req, res, next) => {
       return;
     }
 
-    const user = await getDemoUser();
+    const user = await getActiveUser(req);
     const where = {
       campaign: { userId: user.id },
       status: status === 'sent' ? { in: ['sent', 'failed'] } : status,
@@ -66,7 +74,7 @@ router.get('/emails', async (req, res, next) => {
 
 router.get('/campaigns/:id', async (req, res, next) => {
   try {
-    const user = await getDemoUser();
+    const user = await getActiveUser(req);
     const campaign = await prisma.campaign.findFirst({
       where: { id: req.params.id, userId: user.id },
       include: { emails: { orderBy: { sequence: 'asc' } } },
@@ -86,9 +94,9 @@ router.get('/campaigns/:id', async (req, res, next) => {
   }
 });
 
-router.get('/senders', async (_req, res, next) => {
+router.get('/senders', async (req, res, next) => {
   try {
-    const user = await getDemoUser();
+    const user = await getActiveUser(req);
     const senders = await prisma.sender.findMany({
       where: { userId: user.id },
       orderBy: { createdAt: 'asc' },
@@ -103,7 +111,7 @@ router.get('/senders', async (_req, res, next) => {
 router.post('/senders', async (req, res, next) => {
   try {
     const input = senderSchema.parse(req.body);
-    const user = await getDemoUser();
+    const user = await getActiveUser(req);
     const sender = await prisma.sender.create({
       data: {
         userId: user.id,

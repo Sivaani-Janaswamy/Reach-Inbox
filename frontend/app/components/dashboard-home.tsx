@@ -1,11 +1,12 @@
 'use client';
 
 import { ChangeEvent, FormEvent, useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { EmptyState, StatusBadge } from './ui';
 import { AppShell } from './app-shell';
 import type { CurrentUser, EmailListResponse, EmailRecord, Sender, SenderListResponse, Tab } from '../types';
 
-const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+const apiBase = process.env.NEXT_PUBLIC_API_URL || '';
 
 function formatDate(value: string | null) {
   if (!value) return '-';
@@ -13,6 +14,7 @@ function formatDate(value: string | null) {
 }
 
 export default function DashboardHome() {
+  const router = useRouter();
   const [tab, setTab] = useState<Tab>('scheduled');
   const [emails, setEmails] = useState<EmailRecord[]>([]);
   const [senders, setSenders] = useState<Sender[]>([]);
@@ -49,7 +51,7 @@ export default function DashboardHome() {
 
   async function logout() {
     await fetch(`${apiBase}/auth/logout`, { method: 'POST', credentials: 'include' });
-    setNotice('You have been logged out');
+    router.replace('/login');
   }
 
   return (

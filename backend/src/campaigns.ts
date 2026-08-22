@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, type Request } from 'express';
 import multer from 'multer';
 import { parse } from 'csv-parse/sync';
 import { prisma } from './lib/prisma.js';
@@ -10,7 +10,18 @@ const upload = multer({
 });
 
 const router = Router();
-const demoUserEmail = 'demo@reachinbox.local';
+
+async function getActiveUser(req: Request) {
+  const sessionUser = req.user as Express.User | undefined;
+  if (sessionUser?.id) {
+    const user = await prisma.user.findUnique({ where: { id: sessionUser.id } });
+    if (user) return user;
+  }
+
+  const user = await prisma.user.findFirst({ orderBy: { createdAt: 'asc' } });
+  if (!user) throw new Error('Demo user is not seeded');
+  return user;
+}
 
 function parseRecipientEmails(csv: string): string[] {
   const records = parse(csv, { columns: true, skip_empty_lines: true, trim: true }) as Record<string, string>[];
@@ -71,11 +82,7 @@ router.post('/', upload.single('leads'), async (req, res, next) => {
       return;
     }
 
-    const user = await prisma.user.findUnique({ where: { email: demoUserEmail } });
-    if (!user) {
-      res.status(500).json({ error: 'Demo user is not seeded' });
-      return;
-    }
+    const user = await getActiveUser(req);
     const sender = senderId
       ? await prisma.sender.findFirst({ where: { id: senderId, userId: user.id } })
       : await prisma.sender.findFirst({ where: { userId: user.id }, orderBy: { createdAt: 'asc' } });

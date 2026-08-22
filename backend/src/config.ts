@@ -12,5 +12,5 @@ export const config = {
   maxEmailsPerHourGlobal: Number(process.env.MAX_EMAILS_PER_HOUR_GLOBAL || 500),
   sessionSecret: process.env.SESSION_SECRET || 'reachinbox-development-session-secret',
   frontendUrl: process.env.FRONTEND_URL || 'http://localhost:3000',
-  googleCallbackUrl: process.env.GOOGLE_CALLBACK_URL || 'http://localhost:4000/auth/google/callback',
+  googleCallbackUrl: process.env.GOOGLE_CALLBACK_URL || 'http://localhost:3000/auth/google/callback',
 };

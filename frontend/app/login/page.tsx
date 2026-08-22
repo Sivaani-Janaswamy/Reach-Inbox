@@ -1,13 +1,15 @@
 'use client';
 
-import { FormEvent, useEffect } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowRight, LockKeyhole, Mail } from 'lucide-react';
 
-const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+const apiBase = process.env.NEXT_PUBLIC_API_URL || '';
 
 export default function LoginPage() {
   const router = useRouter();
+  const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -22,18 +24,51 @@ export default function LoginPage() {
     };
   }, [router]);
 
-  function submit(event: FormEvent<HTMLFormElement>) {
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const email = String(form.get('email') || '').trim();
+    const password = String(form.get('password') || '').trim();
+    if (!email || !password) {
+      setError('Enter both email and password.');
+      return;
+    }
+
+    setSubmitting(true);
+    setError('');
+    try {
+      const response = await fetch(`${apiBase}/auth/local`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email, password }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Could not sign in');
+      router.replace(result.redirect || '/dashboard');
+    } catch (loginError) {
+      setError(loginError instanceof Error ? loginError.message : 'Could not sign in');
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
     <main className="login-screen flex min-h-screen items-center justify-center px-5 py-10">
-      <LoginCard onSubmit={submit} />
+      <LoginCard onSubmit={submit} error={error} submitting={submitting} />
     </main>
   );
 }
 
-function LoginCard({ onSubmit }: { onSubmit: (event: FormEvent<HTMLFormElement>) => void }) {
+function LoginCard({
+  onSubmit,
+  error,
+  submitting,
+}: {
+  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  error: string;
+  submitting: boolean;
+}) {
   return (
     <section className="w-full max-w-[460px] rounded-[28px] border border-gray-200 bg-white p-8 shadow-[0_20px_70px_rgba(15,23,42,0.07)] sm:p-10">
       <div className="text-center">
@@ -59,8 +94,9 @@ function LoginCard({ onSubmit }: { onSubmit: (event: FormEvent<HTMLFormElement>)
       <form className="space-y-4" onSubmit={onSubmit}>
         <TextInput icon={<Mail className="h-4 w-4" />} name="email" placeholder="Email address" type="email" autoComplete="email" />
         <TextInput icon={<LockKeyhole className="h-4 w-4" />} name="password" placeholder="Password" type="password" autoComplete="current-password" />
-        <button className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-gray-900 text-sm font-semibold text-white transition hover:bg-black" type="submit">
-          Open workspace
+        {error && <p className="text-sm text-red-600">{error}</p>}
+        <button className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-gray-900 text-sm font-semibold text-white transition hover:bg-black disabled:cursor-not-allowed disabled:bg-gray-400" type="submit" disabled={submitting}>
+          {submitting ? 'Signing in...' : 'Open workspace'}
           <ArrowRight className="h-4 w-4" aria-hidden="true" />
         </button>
       </form>

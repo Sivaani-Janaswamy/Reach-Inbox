@@ -30,3 +30,32 @@ test('POST /api/senders validates input', async () => {
   assert.equal(response.status, 400);
   assert.equal(response.body.error, 'Validation failed');
 });
+
+test('POST /auth/local signs in a new user and seeds a sender', async () => {
+  const email = `local-${Date.now()}@example.com`;
+  const agent = request.agent(app);
+
+  try {
+    const response = await agent
+      .post('/auth/local')
+      .send({ email, password: 'demo-password' });
+
+    assert.equal(response.status, 200);
+    assert.equal(response.body.email, email);
+    assert.equal(response.body.redirect, '/dashboard');
+
+    const me = await agent.get('/api/me');
+    assert.equal(me.status, 200);
+    assert.equal(me.body.email, email);
+
+    const senderResponse = await agent.get('/api/senders');
+    assert.equal(senderResponse.status, 200);
+    assert.ok(senderResponse.body.data.length >= 1);
+  } finally {
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (user) {
+      await prisma.sender.deleteMany({ where: { userId: user.id } });
+      await prisma.user.delete({ where: { id: user.id } });
+    }
+  }
+});
